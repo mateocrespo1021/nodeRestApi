@@ -35,7 +35,8 @@ const UsuarioSchema = Schema({
 //Uso una funcion normal para tener la referencia del this ,
 //esta configuracion hace que me retorne sin el password por seguridad
 UsuarioSchema.methods.toJSON = function () {
-  const { __v, password, ...usuario } = this.toObject();
+  const { __v, password,_id, ...usuario } = this.toObject();
+  usuario.uid=_id
   return usuario;
 };
 

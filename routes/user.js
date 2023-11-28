@@ -7,22 +7,32 @@ const {
   userPatch,
 } = require("../controllers/user");
 const { check } = require("express-validator");
-const { validarCampos } = require("../middlewares/validar-campos");
-const { esRolValido, existeEmail, existeUsuarioPorId } = require("../helpers/db-validators");
+const {
+  esRolValido,
+  existeEmail,
+  existeUsuarioPorId,
+} = require("../helpers/db-validators");
+const {
+  validarJWT,
+  validarCampos,
+  esAdminRole,
+  tieneRole,
+} = require("../middlewares");
 
 const router = Router();
 
 router.get("/", userGet);
 
-router.put("/:id",
-[
-  check('id','No es un ID valido').isMongoId(),
-  check('id').custom((id)=>existeUsuarioPorId(id)),
-  check("rol").custom((rol) => esRolValido(rol)),
-  validarCampos
-]
-,
-userPut);
+router.put(
+  "/:id",
+  [
+    check("id", "No es un ID valido").isMongoId(),
+    check("id").custom((id) => existeUsuarioPorId(id)),
+    check("rol").custom((rol) => esRolValido(rol)),
+    validarCampos,
+  ],
+  userPut
+);
 
 router.post(
   "/",
@@ -34,17 +44,24 @@ router.post(
     check("nombre", "El nombre es obligatorio").not().isEmpty(),
     //check("rol", "No es un rol valido").isIn(['ADMIN_ROLE','USER_ROLE']),
     check("rol").custom((rol) => esRolValido(rol)),
-    check("correo").custom((correo)=>existeEmail(correo)),
+    check("correo").custom((correo) => existeEmail(correo)),
     validarCampos,
   ],
   userPost
 );
 
-router.delete("/:id",[
-  check('id','No es un ID valido').isMongoId(),
-  check('id').custom(existeUsuarioPorId),
-  validarCampos
-], userDelete);
+router.delete(
+  "/:id",
+  [
+    validarJWT,
+    //esAdminRole,
+    tieneRole("ADMIN_ROLE", "VENTAS_ROLE"),
+    check("id", "No es un ID valido").isMongoId(),
+    check("id").custom(existeUsuarioPorId),
+    validarCampos,
+  ],
+  userDelete
+);
 
 router.patch("/", userPatch);
 
